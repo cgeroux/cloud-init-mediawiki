@@ -1,20 +1,21 @@
-#!/usr/bin python3
+#!/usr/bin/python3
 import optparse as op
 import os
 import shutil
 import subprocess
+import glob
 
-def parseOptions()
+def parseOptions():
   """Parses command line options
   """
   
   
-  parser=op.OptionParser(usage=Usage %prog USERNAME
-    ,version=%prog 1.0,description=Sets up Apache2 for the given USERNAME)
+  parser=op.OptionParser(usage="Usage %prog"
+    ,version="%prog 1.0",description="Sets up mediawiki")
   
   #parse command line options
   return parser.parse_args()
-def replaceStrInFile(strMatch,strReplace,fileName)
+def replaceStrInFile(strMatch,strReplace,fileName):
   """Replace all occurrences of strMatch with strReplace in file fileName
   """
   
@@ -25,37 +26,48 @@ def replaceStrInFile(strMatch,strReplace,fileName)
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
-def makePublicHtml(userName)
-  """Creates the public html directory and index.html in the users home directory
+def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
+  ,documentRoot="/var/www/html",owner="root",group="root",cleanUp=True):
+  """Downloads media wiki and puts it into document root
   """
   
-  #make public html directory
-  publicHtmlDir=home+userName+public_html
-  try
-    os.makedirs(publicHtmlDir)
-  except FileExistsError
-    pass
+  tmpMediaWikiDir=os.path.join(tmpDir,"mediawiki-"+version+patch)
+  url="https://releases.wikimedia.org/mediawiki/"+version+"/mediawiki-" \
+    +version+patch+".tar.gz"
   
-  #make place holder index file
-  indexFileName=os.path.join(publicHtmlDir,index.html)
-  indexText=h1Edit +indexFileName+ to customize your websiteh1
-  file=open(indexFileName,'w')
-  file.write(indexText)
-  file.close()
+  #download and untar mediawiki
+  subprocess.call(["wget",url,"--directory-prefix="+tmpDir])
+  subprocess.call(["tar","-xzf",tmpMediaWikiDir+".tar.gz","-C",tmpDir])
   
-  #give user ownership
-  shutil.chown(publicHtmlDir,user=userName,group=userName)
-  shutil.chown(indexFileName,user=userName,group=userName)
-def restartApache()
+  #move to files to document root
+  paths=glob.glob(tmpMediaWikiDir+"/*")
+  for path in paths:
+    pathBaseName=os.path.basename(path)
+    shutil.move(path,os.path.join(documentRoot,pathBaseName))
+  
+  #change owner and group
+  for path in paths:
+    pathBaseName=os.path.basename(path)
+    shutil.chown(os.path.join(documentRoot,pathBaseName)
+      ,user=owner
+      ,group=group)
+  
+  #clean up temporary files
+  if cleanUp:
+    os.removedirs(tmpMediaWikiDir)
+    os.remove(tmpMediaWikiDir+".tar.gz")
+  
+def restartApache():
   """Restarts apache2
   """
   
   subprocess.call([service,apache2,restart])
-def main()
+def main():
   
   #parse command line options
   (options,args)=parseOptions()
-  print("mediawiki-setup.py run")
+  
+  getMediaWiki(cleanUp=True)
   
   
 #  if len(args)!=1
@@ -75,5 +87,5 @@ def main()
 #  makePublicHtml(userName)
 #  
 #  restartApache()
-if __name__ == __main__
+if __name__ == "__main__":
  main()
