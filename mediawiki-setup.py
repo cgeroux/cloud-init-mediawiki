@@ -27,7 +27,8 @@ def replaceStrInFile(strMatch,strReplace,fileName):
   file.write(fileText)
   file.close()
 def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
-  ,documentRoot="/var/www/html",owner="root",group="root",cleanUp=True):
+  ,documentRoot="/var/www/html",owner="root",group="root",cleanUp=True
+  ,purgeDocRoot=True):
   """Downloads media wiki and puts it into document root
   """
   
@@ -38,6 +39,15 @@ def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
   #download and untar mediawiki
   subprocess.call(["wget",url,"--directory-prefix="+tmpDir])
   subprocess.call(["tar","-xzf",tmpMediaWikiDir+".tar.gz","-C",tmpDir])
+  
+  #remove existing files in document root
+  if purgeDocRoot:
+    paths=glob.glob(documentRoot+"/*")
+    for path in paths:
+      try:
+        os.remove(path)
+      except IsADirectoryError:
+        shutil.rmtree(path)
   
   #move to files to document root
   paths=glob.glob(tmpMediaWikiDir+"/*")
@@ -56,12 +66,11 @@ def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
   if cleanUp:
     os.removedirs(tmpMediaWikiDir)
     os.remove(tmpMediaWikiDir+".tar.gz")
-  
 def restartApache():
   """Restarts apache2
   """
   
-  subprocess.call([service,apache2,restart])
+  subprocess.call(["service","apache2","restart"])
 def main():
   
   #parse command line options

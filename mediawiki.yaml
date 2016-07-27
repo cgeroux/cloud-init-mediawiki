@@ -7,10 +7,13 @@ packages:
   - php5
   - mysql-server
   - php5-mysql
+  - php5-apcu
+  - php5-gd
+  - php5-intl
 runcmd:
   - ["cd","/tmp"]
   - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
-  - ["/tmp/mediawiki-setup.py"]
+  - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py"]
 #  - ["wget","--directory-prefix=/tmp","https://raw.githubusercontent.com/cgeroux/cloud-init-mediawiki/master/mediawiki-setup.py"]
 #  - ["chmod","0700","/tmp/mediawiki-setup.py"]
 #  - ["/tmp/mediawiki-setup.py"]
