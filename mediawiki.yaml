@@ -4,6 +4,7 @@ package_upgrade: true
 packages:
   - apache2
 runcmd:
-  - ["wget","https://raw.githubusercontent.com/cgeroux/cloud-init-mediawiki/master/mediawiki-setup.py","/tmp/mediawiki-setup.py"]
+  - ["wget","--directory-prefix=/tmp","https://raw.githubusercontent.com/cgeroux/cloud-init-mediawiki/master/mediawiki-setup.py"]
+  - ["chmod","0700","/tmp/mediawiki-setup.py"]
   - ["/tmp/mediawiki-setup.py"]
-  - ["rm","/tmp/mediawiki-setup.py"]
+#  - ["rm","/tmp/mediawiki-setup.py"]
