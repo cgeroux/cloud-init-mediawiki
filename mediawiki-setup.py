@@ -1,4 +1,4 @@
-#!usrbinenv python3
+#!/usr/bin/env python3
 import optparse as op
 import os
 import shutil

@@ -4,6 +4,6 @@ package_upgrade: true
 packages:
   - apache2
 runcmd:
-  - ["wget","https://raw.githubusercontent.com/cgeroux/apache-cloud-init/master/setup.py","/tmp/setup.py"]
-  - ["/tmp/setup.py"]
-  - ["rm","/tmp/setup.py"]
+  - ["wget","https://raw.githubusercontent.com/cgeroux/cloud-init-mediawiki/master/mediawiki-setup.py","/tmp/mediawiki-setup.py"]
+  - ["/tmp/mediawiki-setup.py"]
+  - ["rm","/tmp/mediawiki-setup.py"]
