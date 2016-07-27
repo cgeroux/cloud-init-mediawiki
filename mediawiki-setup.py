@@ -25,7 +25,7 @@ def replaceStrInFile(strMatch,strReplace,fileName):
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
-def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
+def setupMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
   ,documentRoot="/var/www/html",owner="root",group="root",cleanUp=True
   ,purgeDocRoot=True):
   """Downloads media wiki and puts it into document root
@@ -65,6 +65,14 @@ def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
   if cleanUp:
     os.removedirs(tmpMediaWikiDir)
     os.remove(tmpMediaWikiDir+".tar.gz")
+  
+  #do basic configure of the wiki
+  #TODO: need to make many of these arguments parameters, and need 
+  #to test this
+  subprocess.call(["php","/var/www/html/maintenance/install.php"
+    ,"--scriptpath", "\"\'","--pass","adminpass123","--server"
+    ,"http://206.167.181.71","--dbuser","root","--dbserver", "localhost",
+    "Test Wiki", "adminuser"])
 def restartApache():
   """Restarts apache2
   """
@@ -75,6 +83,6 @@ def main():
   #parse command line options
   (options,args)=parseOptions()
   
-  getMediaWiki(cleanUp=True)
+  setupMediaWiki(cleanUp=True)
 if __name__ == "__main__":
  main()
