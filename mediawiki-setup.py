@@ -9,7 +9,6 @@ def parseOptions():
   """Parses command line options
   """
   
-  
   parser=op.OptionParser(usage="Usage %prog"
     ,version="%prog 1.0",description="Sets up mediawiki")
   
@@ -49,7 +48,7 @@ def getMediaWiki(version="1.27",patch=".0",tmpDir="/tmp"
       except IsADirectoryError:
         shutil.rmtree(path)
   
-  #move to files to document root
+  #move files to document root
   paths=glob.glob(tmpMediaWikiDir+"/*")
   for path in paths:
     pathBaseName=os.path.basename(path)
@@ -77,24 +76,5 @@ def main():
   (options,args)=parseOptions()
   
   getMediaWiki(cleanUp=True)
-  
-  
-#  if len(args)!=1
-#    raise Exception(must have exactly one argument)
-#  
-#  userName=args[0]
-#  
-#  #change root directory
-#  replaceStrInFile(Directory varwwwhtml,Directory home+userName+public_html,etcapache2apache2.conf)
-#  replaceStrInFile(Directory varwww,Directory home+userName+public_html,etcapache2apache2.conf)
-#  
-#  #change document root
-#  replaceStrInFile(DocumentRoot varwwwhtml,DocumentRoot home+userName+public_html,etcapache2sites-available000-default.conf)
-#  replaceStrInFile(DocumentRoot varwww,DocumentRoot home+userName+public_html,etcapache2sites-available000-default.conf)
-#  
-#  #make user's public_html
-#  makePublicHtml(userName)
-#  
-#  restartApache()
 if __name__ == "__main__":
  main()
