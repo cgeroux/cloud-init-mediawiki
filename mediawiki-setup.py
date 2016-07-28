@@ -68,7 +68,7 @@ def setupMediaWiki(settings={}):
     ,"wikiName":"Test Wiki"
     ,"wikiReadPerm":"user"          #public, user, sysop
     ,"wikiEditPerm":"user"          #public, user, sysop
-    ,"wikiaccCreatePerm":"sysop"    #public, user, sysop
+    ,"wikiAccCreatePerm":"sysop"    #public, user, sysop
     ,"wikiAdminName":adminName
     ,"wikiAdminPass":adminPassWd
     ,"server":"http://206.167.181.71"
@@ -154,8 +154,10 @@ def setupMediaWiki(settings={}):
       ,localSettingsFile)
   
   #copy default cc-wiki-logo
-  src=os.path.join(settings["tmpDir"],"cloud-init-mediawiki/cc-cloud-wiki-logo.png")
-  dest=os.path.join(settings["documentRoot"],"resources/assets/cc-cloud-wiki-logo.png")
+  src=os.path.join(settings["tmpDir"]
+    ,"cloud-init-mediawiki/cc-cloud-wiki-logo.png")
+  dest=os.path.join(settings["documentRoot"]
+    ,"resources/assets/cc-cloud-wiki-logo.png")
   shutil.copy(src,dest)
   
   #set logo
@@ -165,40 +167,42 @@ def setupMediaWiki(settings={}):
     ,localSettingsFile)
   
   #secure LocalSettings.php, only owner needs read access
-  shutil.chown(localSettingsFile,user=settings["owner"],group=settings["group"])
+  shutil.chown(localSettingsFile,user=settings["owner"]
+    ,group=settings["group"])
   os.chmod(localSettingsFile,0o400)
-  
-    ,"wikiReadPerm":"user"          #public, user, sysop
-    ,"wikiEditPerm":"user"          #public, user, sysop
-    ,"wikiaccCreatePerm":"sysop"    #public, user, sysop
   
   #Set read permissions
   if settings["wikiReadPerm"]=="user" or settings["wikiReadPerm"]=="sysop":
-    appendToFile(["$wgGroupPermissions['*']['read'] = false;"],localSettingsFile)
+    appendToFile(["$wgGroupPermissions['*']['read'] = false;\n"]
+      ,localSettingsFile)
+    if settings["enableUploads"]:
+      print("WARNING: read permission not public but uploads are enabled."
+        +" The public will still be able to see uploads if they know the "
+        +"correct url to go directly to the file.")
   if settings["wikiReadPerm"]=="sysop":
-    appendToFile(["$wgGroupPermissions['user']['read'] = false;"],localSettingsFile)
+    appendToFile(["$wgGroupPermissions['user']['read'] = false;\n"]
+      ,localSettingsFile)
     
   #ensure the login page is always readable
-  appendToFile(["$wgWhitelistRead = array (\"Special:Userlogin\");"],localSettingsFile)
+  appendToFile(["$wgWhitelistRead = array (\"Special:Userlogin\");\n"]
+    ,localSettingsFile)
   
   #Set edit permissions
   if settings["wikiEditPerm"]=="user" or settings["wikiEditPerm"]=="sysop":
-    appendToFile(["$wgGroupPermissions['*']['edit'] = false;"],localSettingsFile)
+    appendToFile(["$wgGroupPermissions['*']['edit'] = false;\n"]
+      ,localSettingsFile)
   if settings["wikiEditPerm"]=="sysop":
-    appendToFile(["$wgGroupPermissions['user']['edit'] = false;"],localSettingsFile)
+    appendToFile(["$wgGroupPermissions['user']['edit'] = false;\n"]
+      ,localSettingsFile)
   
   #Set account creation permissions
-  if settings["wikiaccCreatePerm"]=="user" or settings["wikiaccCreatePerm"]=="sysop":
-    appendToFile(["$wgGroupPermissions['*']['createaccount'] = false;"],localSettingsFile)
-  if settings["wikiaccCreatePerm"]=="sysop":
-    appendToFile(["$wgGroupPermissions['user']['createaccount'] = false;"],localSettingsFile)
-  
-  
-  #print out user names and password info
-  print("Wiki:adminuser: "+settings["wikiAdminName"])
-  print("Wiki:adminpass: "+settings["wikiAdminPass"])
-  print("DB:user: "+settings["dbuser"])
-  print("DB:password: "+settings["dbpass"])
+  if settings["wikiAccCreatePerm"]=="user" 
+    or settings["wikiAccCreatePerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['*']['createaccount'] = false;\n"]
+      ,localSettingsFile)
+  if settings["wikiAccCreatePerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['user']['createaccount'] = false;\n"]
+      ,localSettingsFile)
   
   return (settings["wikiAdminName"],settings["wikiAdminPass"])
 def restartApache():
@@ -211,6 +215,9 @@ def main():
   #parse command line options
   (options,args)=parseOptions()
   
-  setupMediaWiki(settings={"enableUploads":True})
+  (adminUser,adminPassWd)=setupMediaWiki(settings={"enableUploads":True})
+  
+  print("Wiki Admin Username:"+adminUser)
+  print("Wiki Admin password:"+adminPassWd)
 if __name__ == "__main__":
  main()
