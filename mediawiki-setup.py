@@ -109,16 +109,24 @@ def setupMediaWiki(settings={}):
     ,"--dbserver",settings["dbserver"]
     ,settings["wikiName"]
     ,settings["wikiAdminName"]])
-    
+  
+  localSettingsFile=os.path.join(settings["documentRoot"],"LocalSettings.php")
+  
   #enable file uploads
   if settings["enableUploads"]:
     replaceStrInFile("$wgEnableUploads = false;","$wgEnableUploads = true;"
-      ,os.path.join(settings["documentRoot"],"LocalSettings.php"))
+      ,localSettingsFile)
+  
+  #copy default cc-wiki-logo
+  src=os.path.join(settings["tmpDir"],"cloud-init-mediawiki/cc-cloud-wiki-logo.png")
+  dest=os.path.join(settings["documentRoot"],"resources/assets/cc-cloud-wiki-logo.png")
+  shutil.copy(src,dest)
   
   #set logo
   replaceStrInFile(
     "$wgLogo = \"$wgResourceBasePath/resources/assets/wiki.png\";"
-    ,"$wgLogo = \""+settings["logoURL"]+"\"")
+    ,"$wgLogo = \""+settings["logoURL"]+"\""
+    ,localSettingsFile)
 def restartApache():
   """Restarts apache2
   """
