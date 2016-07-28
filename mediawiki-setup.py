@@ -6,6 +6,7 @@ import subprocess
 import glob
 import string
 import random
+import stat
 
 def parseOptions():
   """Parses command line options
@@ -30,7 +31,7 @@ def replaceStrInFile(strMatch,strReplace,fileName,maxOccurs=None):
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
-def genNameAndPass(length=6
+def genNameAndPass(length=8
   ,chars=string.ascii_uppercase+string.ascii_lowercase+string.digits):
   
   name=''
@@ -150,7 +151,7 @@ def setupMediaWiki(settings={}):
   
   #secure LocalSettings.php
   shutil.chown(localSettingsFile,user=settings["owner"],group=settings["group"])
-  os.chmod(localSettingsFile,'0600')
+  os.chmod(localSettingsFile,0o600)
   
   print("Wiki:adminuser: "+settings["wikiAdminName"])
   print("Wiki:adminpass: "+settings["adminPassWd"])
