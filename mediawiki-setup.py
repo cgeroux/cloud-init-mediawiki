@@ -197,7 +197,7 @@ def setupMediaWiki(settings={}):
       ,localSettingsFile)
   
   #Set account creation permissions
-  if settings["wikiAccCreatePerm"]=="user" 
+  if settings["wikiAccCreatePerm"]=="user" \
     or settings["wikiAccCreatePerm"]=="sysop":
     appendToFile(["$wgGroupPermissions['*']['createaccount'] = false;\n"]
       ,localSettingsFile)
@@ -206,7 +206,7 @@ def setupMediaWiki(settings={}):
       ,localSettingsFile)
   
   #add any extra configuration options explicitly set
-  appendToFile(extraConfigLines,localSettingsFile)
+  appendToFile(settings["extraConfigLines"],localSettingsFile)
   
   return (settings["wikiAdminName"],settings["wikiAdminPass"])
 def restartApache():
