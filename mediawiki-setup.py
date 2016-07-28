@@ -67,7 +67,7 @@ def setupMediaWiki(settings={}):
     ,settings["tmpDir"]])
   
   #remove existing files in document root
-  if purgeDocRoot:
+  if settings["purgeDocRoot"]:
     paths=glob.glob(settings["documentRoot"]+"/*")
     for path in paths:
       try:
@@ -85,11 +85,11 @@ def setupMediaWiki(settings={}):
   for path in paths:
     pathBaseName=os.path.basename(path)
     shutil.chown(os.path.join(settings["documentRoot"],pathBaseName)
-      ,user=settings["owner
-      ,group=settings["group)
+      ,user=settings["owner"]
+      ,group=settings["group"])
   
   #clean up temporary files
-  if settings["cleanUp:
+  if settings["cleanUp"]:
     os.removedirs(tmpMediaWikiDir)
     os.remove(tmpMediaWikiDir+".tar.gz")
   
@@ -98,7 +98,7 @@ def setupMediaWiki(settings={}):
   #to test this
   subprocess.call(["php"
     ,os.path.join(settings["documentRoot"],"maintenance/install.php")
-    ,"--scriptpath", "\"\""
+    ,"--scriptpath", ""
     ,"--pass",settings["wikiAdminPass"]
     ,"--server",settings["server"]
     ,"--dbuser",settings["dbuser"]
