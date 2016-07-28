@@ -83,6 +83,7 @@ def setupMediaWiki(settings={}):
     ,"purgeDocRoot":True
     ,"enableUploads":False
     ,"logoURL":"$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
+    ,"extraConfigLines":[]
     }
   
   #set settings to default if no settings given or if setting is None
@@ -203,6 +204,9 @@ def setupMediaWiki(settings={}):
   if settings["wikiAccCreatePerm"]=="sysop":
     appendToFile(["$wgGroupPermissions['user']['createaccount'] = false;\n"]
       ,localSettingsFile)
+  
+  #add any extra configuration options explicitly set
+  appendToFile(extraConfigLines,localSettingsFile)
   
   return (settings["wikiAdminName"],settings["wikiAdminPass"])
 def restartApache():
