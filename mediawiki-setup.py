@@ -4,6 +4,8 @@ import os
 import shutil
 import subprocess
 import glob
+import string
+import random
 
 def parseOptions():
   """Parses command line options
@@ -114,7 +116,7 @@ def setupMediaWiki(settings={}):
     os.remove(tmpMediaWikiDir+".tar.gz")
   
   #set mysql root password (initial install has no root password)
-  suprocess.call(["mysqladmin","-u","root","password",settings["dbpass"]])
+  subprocess.call(["mysqladmin","-u","root","password",settings["dbpass"]])
   
   #do basic configure of the wiki
   subprocess.call(["php"
@@ -148,7 +150,7 @@ def setupMediaWiki(settings={}):
   
   #secure LocalSettings.php
   shutil.chown(localSettingsFile,user=settings["owner"],group=settings["group"])
-  shutil.chmod(localSettingsFile,'0600')
+  os.chmod(localSettingsFile,'0600')
   
   print("Wiki:adminuser: "+settings["wikiAdminName"])
   print("Wiki:adminpass: "+settings["adminPassWd"])
