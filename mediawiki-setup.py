@@ -14,14 +14,17 @@ def parseOptions():
   
   #parse command line options
   return parser.parse_args()
-def replaceStrInFile(strMatch,strReplace,fileName):
+def replaceStrInFile(strMatch,strReplace,fileName,maxOccurs=None):
   """Replace all occurrences of strMatch with strReplace in file fileName
   """
   
   file=open(fileName,mode='r')
   fileText=file.read()
   file.close()
-  fileText=fileText.replace(strMatch,strReplace)
+  if maxOccurs!=None:
+    fileText=fileText.replace(strMatch,strReplace,max=maxOccurs)
+  else:
+    fileText=fileText.replace(strMatch,strReplace)
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
@@ -45,6 +48,8 @@ def setupMediaWiki(settings={}):
     ,"group":"root"
     ,"cleanUp":True
     ,"purgeDocRoot":True
+    ,"enableUploads":False
+    ,"logoURL":"$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     }
   
   #set settings to default if no settings given or if setting is None
@@ -94,8 +99,6 @@ def setupMediaWiki(settings={}):
     os.remove(tmpMediaWikiDir+".tar.gz")
   
   #do basic configure of the wiki
-  #TODO: need to make many of these arguments parameters, and need 
-  #to test this
   subprocess.call(["php"
     ,os.path.join(settings["documentRoot"],"maintenance/install.php")
     ,"--scriptpath", ""
@@ -106,6 +109,16 @@ def setupMediaWiki(settings={}):
     ,"--dbserver",settings["dbserver"]
     ,settings["wikiName"]
     ,settings["wikiAdminName"]])
+    
+  #enable file uploads
+  if settings["enableUploads"]:
+    replaceStrInFile("$wgEnableUploads = false;","$wgEnableUploads = true;"
+      ,os.path.join(settings["documentRoot"],"LocalSettings.php"))
+  
+  #set logo
+  replaceStrInFile(
+    "$wgLogo = \"$wgResourceBasePath/resources/assets/wiki.png\";"
+    ,"$wgLogo = \""+settings["logoURL"]+"\"")
 def restartApache():
   """Restarts apache2
   """
