@@ -125,7 +125,7 @@ def setupMediaWiki(settings={}):
   #set logo
   replaceStrInFile(
     "$wgLogo = \"$wgResourceBasePath/resources/assets/wiki.png\";"
-    ,"$wgLogo = \""+settings["logoURL"]+"\""
+    ,"$wgLogo = \""+settings["logoURL"]+"\";"
     ,localSettingsFile)
 def restartApache():
   """Restarts apache2
@@ -137,6 +137,6 @@ def main():
   #parse command line options
   (options,args)=parseOptions()
   
-  setupMediaWiki()
+  setupMediaWiki(settings={"enableUploads":True})
 if __name__ == "__main__":
  main()
