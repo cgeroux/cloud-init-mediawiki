@@ -31,7 +31,19 @@ def replaceStrInFile(strMatch,strReplace,fileName,maxOccurs=None):
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
-def genNameAndPass(length=8
+def appendToFile(strsToAppend,fileName):
+  """Append multiple string to the end of a file
+  """
+  
+  file=open(fileName,mode='r')
+  fileText=file.read()
+  file.close()
+  for strToAppend in strsToAppend:
+    fileText+=strToAppend
+  file=open(fileName,mode='w')
+  file.write(fileText)
+  file.close()
+def genNameAndPass(length=16
   ,chars=string.ascii_uppercase+string.ascii_lowercase+string.digits):
   
   name=''
@@ -54,6 +66,9 @@ def setupMediaWiki(settings={}):
     "version":"1.27"
     ,"patch":"0"
     ,"wikiName":"Test Wiki"
+    ,"wikiReadPerm":"user"          #public, user, sysop
+    ,"wikiEditPerm":"user"          #public, user, sysop
+    ,"wikiaccCreatePerm":"sysop"    #public, user, sysop
     ,"wikiAdminName":adminName
     ,"wikiAdminPass":adminPassWd
     ,"server":"http://206.167.181.71"
@@ -149,15 +164,43 @@ def setupMediaWiki(settings={}):
     ,"$wgLogo = \""+settings["logoURL"]+"\";"
     ,localSettingsFile)
   
-  #secure LocalSettings.php
+  #secure LocalSettings.php, only owner needs read access
   shutil.chown(localSettingsFile,user=settings["owner"],group=settings["group"])
-  os.chmod(localSettingsFile,0o600)
+  os.chmod(localSettingsFile,0o400)
   
+    ,"wikiReadPerm":"user"          #public, user, sysop
+    ,"wikiEditPerm":"user"          #public, user, sysop
+    ,"wikiaccCreatePerm":"sysop"    #public, user, sysop
+  
+  #Set read permissions
+  if settings["wikiReadPerm"]=="user" or settings["wikiReadPerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['*']['read'] = false;"],localSettingsFile)
+  if settings["wikiReadPerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['user']['read'] = false;"],localSettingsFile)
+    
+  #ensure the login page is always readable
+  appendToFile(["$wgWhitelistRead = array (\"Special:Userlogin\");"],localSettingsFile)
+  
+  #Set edit permissions
+  if settings["wikiEditPerm"]=="user" or settings["wikiEditPerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['*']['edit'] = false;"],localSettingsFile)
+  if settings["wikiEditPerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['user']['edit'] = false;"],localSettingsFile)
+  
+  #Set account creation permissions
+  if settings["wikiaccCreatePerm"]=="user" or settings["wikiaccCreatePerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['*']['createaccount'] = false;"],localSettingsFile)
+  if settings["wikiaccCreatePerm"]=="sysop":
+    appendToFile(["$wgGroupPermissions['user']['createaccount'] = false;"],localSettingsFile)
+  
+  
+  #print out user names and password info
   print("Wiki:adminuser: "+settings["wikiAdminName"])
-  print("Wiki:adminpass: "+settings["adminPassWd"])
-  print("Wiki:dbuser: "+settings["dbuser"])
-  print("Wiki:dbpass: "+settings["dbpass"])
+  print("Wiki:adminpass: "+settings["wikiAdminPass"])
+  print("DB:user: "+settings["dbuser"])
+  print("DB:password: "+settings["dbpass"])
   
+  return (settings["wikiAdminName"],settings["wikiAdminPass"])
 def restartApache():
   """Restarts apache2
   """
