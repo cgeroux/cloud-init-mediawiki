@@ -28,24 +28,39 @@ def replaceStrInFile(strMatch,strReplace,fileName,maxOccurs=None):
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
+def genNameAndPass(length=6
+  ,chars=string.ascii_uppercase+string.ascii_lowercase+string.digits):
+  
+  name=''
+  for i in range(length):
+    name+=random.SystemRandom().choice(chars)
+    
+  passwd=''
+  for i in range(length):
+    passwd+=random.SystemRandom().choice(chars)
+  
+  return (name,passwd)
 def setupMediaWiki(settings={}):
   """Downloads media wiki and puts it into document root
   """
+  
+  (adminName,adminPassWd)=genNameAndPass()
+  (dummy,dbPassWd)=genNameAndPass()
   
   defaultSettings={
     "version":"1.27"
     ,"patch":"0"
     ,"wikiName":"Test Wiki"
-    ,"wikiAdminName":"admin"
-    ,"wikiAdminPass":"adminpass123"
+    ,"wikiAdminName":adminName
+    ,"wikiAdminPass":adminPassWd
     ,"server":"http://206.167.181.71"
     ,"dbserver":"localhost"
     ,"dbuser":"root"
-    ,"dbpass":""
+    ,"dbpass":dbPassWd
     ,"documentRoot":"/var/www/html"
-    ,"tmpDir":"/tmp"    
-    ,"owner":"root"
-    ,"group":"root"
+    ,"tmpDir":"/tmp"
+    ,"owner":"www-data"
+    ,"group":"www-data"
     ,"cleanUp":True
     ,"purgeDocRoot":True
     ,"enableUploads":False
@@ -98,6 +113,9 @@ def setupMediaWiki(settings={}):
     os.removedirs(tmpMediaWikiDir)
     os.remove(tmpMediaWikiDir+".tar.gz")
   
+  #set mysql root password (initial install has no root password)
+  suprocess.call(["mysqladmin","-u","root","password",settings["dbpass"]])
+  
   #do basic configure of the wiki
   subprocess.call(["php"
     ,os.path.join(settings["documentRoot"],"maintenance/install.php")
@@ -127,6 +145,16 @@ def setupMediaWiki(settings={}):
     "$wgLogo = \"$wgResourceBasePath/resources/assets/wiki.png\";"
     ,"$wgLogo = \""+settings["logoURL"]+"\";"
     ,localSettingsFile)
+  
+  #secure LocalSettings.php
+  shutil.chown(localSettingsFile,user=settings["owner"],group=settings["group"])
+  shutil.chmod(localSettingsFile,'0600')
+  
+  print("Wiki:adminuser: "+settings["wikiAdminName"])
+  print("Wiki:adminpass: "+settings["adminPassWd"])
+  print("Wiki:dbuser: "+settings["dbuser"])
+  print("Wiki:dbpass: "+settings["dbpass"])
+  
 def restartApache():
   """Restarts apache2
   """
