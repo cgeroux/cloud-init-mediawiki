@@ -41,7 +41,7 @@ def replaceStrInFile(strMatch,strReplace,fileName,maxOccurs=None):
   file.close()
   return numMatches
 def replaceStrInFileRe(pattern,replacement,fileName,maxOccurs=None):
-  """Replace all occurrences of strMatch with strReplace in file fileName
+  """Replace all occurrences of pattern with strReplace in file fileName
   up to maxOccurs if specified. This version uses regular expression matching 
   also
   """
@@ -58,7 +58,7 @@ def replaceStrInFileRe(pattern,replacement,fileName,maxOccurs=None):
     if numMatches>maxOccurs:
       numMatches=maxOccurs
   else:
-    fileText=fileText.replace(strMatch,strReplace)
+    fileText=re.sub(pattern,replacement,fileText)
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
@@ -198,6 +198,13 @@ def setupMediaWiki(settings={}):
     "$wgLogo = \"$wgResourceBasePath/resources/assets/wiki.png\";"
     ,"$wgLogo = \""+settings["logoURL"]+"\";"
     ,localSettingsFile)
+    
+  #disable emails as no email client is configured
+  replaceStrInFile("$wgEnableEmail = true;","$wgEnableEmail = false;"
+    ,localSettingsFile)
+  replaceStrInFile("$wgEnableUserEmail = true;","$wgEnableUserEmail = false;"
+    ,localSettingsFile)
+  
   
   #secure LocalSettings.php, only owner needs read access
   shutil.chown(localSettingsFile,user=settings["owner"]
@@ -247,22 +254,24 @@ def securePHP():
   
   #ensure register_globals is disabled
   numReplaces=replaceStrInFileRe(
-    "(?<!([^\s]))register_globals[\s]*=[\s]*(O|o)n","register_globals = Off")
+    "(?<!([^\s]))register_globals[\s]*=[\s]*((O|o)n|(O|o)ff)"
+    ,"register_globals = Off","/etc/php5/apache2/php.ini")
   if numReplaces==0:#if no strings replaced add it
-    appendToFile("register_globals = Off\n")
+    appendToFile("register_globals = Off\n","/etc/php5/apache2/php.ini")
   
   #disable allow_url_fopen
   numReplaces=replaceStrInFileRe(
-    "(?<!([^\s]))allow_url_fopen[\s]*=[\s]*(O|o)n","allow_url_fopen = Off")
+    "(?<!([^\s]))allow_url_fopen[\s]*=[\s]*((O|o)n|(O|o)ff)"
+    ,"allow_url_fopen = Off","/etc/php5/apache2/php.ini")
   if numReplaces==0:#if no strings replaced add it
-    appendToFile("allow_url_fopen = Off\n")
+    appendToFile("allow_url_fopen = Off\n","/etc/php5/apache2/php.ini")
   
   #ensure session.use_trans_sid is off
   numReplaces=replaceStrInFileRe(
-    "(?<!([^\s]))session.use_trans_sid[\s]*=[\s]*(O|o)n"
-    ,"allow_url_fopen = Off")
+    "(?<!([^\s]))session.use_trans_sid[\s]*=[\s]*[0-1]"
+    ,"session.use_trans_sid = 0","/etc/php5/apache2/php.ini")
   if numReplaces==0:#if no strings replaced add it
-    appendToFile("session.use_trans_sid = Off\n")
+    appendToFile("session.use_trans_sid = 0\n","/etc/php5/apache2/php.ini")
   
   #restart apache for settings to take effect
   restartApache()
@@ -271,7 +280,7 @@ def secureMySQL():
   """
   #TODO: implement
   pass
-def secureApache()
+def secureApache():
   """
   """
   #TODO: implement
