@@ -7,6 +7,7 @@ import glob
 import string
 import random
 import stat
+import re
 
 def parseOptions():
   """Parses command line options
@@ -19,18 +20,49 @@ def parseOptions():
   return parser.parse_args()
 def replaceStrInFile(strMatch,strReplace,fileName,maxOccurs=None):
   """Replace all occurrences of strMatch with strReplace in file fileName
+  up to maxOccurs if specified.
   """
   
   file=open(fileName,mode='r')
   fileText=file.read()
   file.close()
+  
+  #how many occurrences are there
+  numMatches=fileText.count(strMatch)
+  
   if maxOccurs!=None:
     fileText=fileText.replace(strMatch,strReplace,max=maxOccurs)
+    if numMatches>maxOccurs:
+      numMatches=maxOccurs
   else:
     fileText=fileText.replace(strMatch,strReplace)
   file=open(fileName,mode='w')
   file.write(fileText)
   file.close()
+  return numMatches
+def replaceStrInFileRe(pattern,replacement,fileName,maxOccurs=None):
+  """Replace all occurrences of strMatch with strReplace in file fileName
+  up to maxOccurs if specified. This version uses regular expression matching 
+  also
+  """
+  
+  file=open(fileName,mode='r')
+  fileText=file.read()
+  file.close()
+  
+  #how many occurrences are there
+  numMatches=len(re.findall(pattern,fileText))
+  
+  if maxOccurs!=None:
+    fileText=re.sub(pattern,replacement,fileText,count=maxOccurs)
+    if numMatches>maxOccurs:
+      numMatches=maxOccurs
+  else:
+    fileText=fileText.replace(strMatch,strReplace)
+  file=open(fileName,mode='w')
+  file.write(fileText)
+  file.close()
+  return numMatches
 def appendToFile(strsToAppend,fileName):
   """Append multiple string to the end of a file
   """
@@ -209,6 +241,41 @@ def setupMediaWiki(settings={}):
   appendToFile(settings["extraConfigLines"],localSettingsFile)
   
   return (settings["wikiAdminName"],settings["wikiAdminPass"])
+def securePHP():
+  """Ensures some basic php security settings are set
+  """
+  
+  #ensure register_globals is disabled
+  numReplaces=replaceStrInFileRe(
+    "(?<!([^\s]))register_globals[\s]*=[\s]*(O|o)n","register_globals = Off")
+  if numReplaces==0:#if no strings replaced add it
+    appendToFile("register_globals = Off\n")
+  
+  #disable allow_url_fopen
+  numReplaces=replaceStrInFileRe(
+    "(?<!([^\s]))allow_url_fopen[\s]*=[\s]*(O|o)n","allow_url_fopen = Off")
+  if numReplaces==0:#if no strings replaced add it
+    appendToFile("allow_url_fopen = Off\n")
+  
+  #ensure session.use_trans_sid is off
+  numReplaces=replaceStrInFileRe(
+    "(?<!([^\s]))session.use_trans_sid[\s]*=[\s]*(O|o)n"
+    ,"allow_url_fopen = Off")
+  if numReplaces==0:#if no strings replaced add it
+    appendToFile("session.use_trans_sid = Off\n")
+  
+  #restart apache for settings to take effect
+  restartApache()
+def secureMySQL():
+  """Ensures some basic MySQL security settings are set
+  """
+  #TODO: implement
+  pass
+def secureApache()
+  """
+  """
+  #TODO: implement
+  pass
 def restartApache():
   """Restarts apache2
   """
@@ -218,6 +285,15 @@ def main():
   
   #parse command line options
   (options,args)=parseOptions()
+  
+  #adjust some php settings to improve security
+  securePHP()
+  
+  #adjust some mysql settings to improve security
+  secureMySQL()
+  
+  #adjust some apache settings to improve security
+  secureApache()
   
   (adminUser,adminPassWd)=setupMediaWiki(settings={"enableUploads":True})
   
