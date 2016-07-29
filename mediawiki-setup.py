@@ -278,13 +278,30 @@ def securePHP():
 def secureMySQL():
   """Ensures some basic MySQL security settings are set
   """
-  #TODO: implement
+  
+  #is default for mysql on ubuntu 14.0.4
+  #bind-address            = 127.0.0.1
   pass
-def secureApache():
+def secureApache(documentRoot):
   """
   """
-  #TODO: implement
-  pass
+  
+  #disallow any execution of files in the uploads directory
+  uploadDirSettings=(
+    "<Directory \""+os.path.join(documentRoot,"/images")+"\"/>\n"
+    "# Ignore .htaccess files\n"
+    "AllowOverride None\n"
+    "\n"
+    "# Serve HTML as plaintext, don't execute SHTML\n"
+    "AddType text/plain .html .htm .shtml .php .phtml .php5\n"
+    "\n"
+    "# Don't run arbitrary PHP code.\n"
+    "php_admin_flag engine off\n"
+    "\n"
+    "# If you've other scripting languages, disable them too.\n"
+    "</Directory>\n")
+  appendToFile(uploadDirSettings,"/etc/apache2/apache2.conf")
+  restatApache()
 def restartApache():
   """Restarts apache2
   """
