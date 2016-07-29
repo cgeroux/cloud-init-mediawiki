@@ -247,7 +247,7 @@ def setupMediaWiki(settings={}):
   #add any extra configuration options explicitly set
   appendToFile(settings["extraConfigLines"],localSettingsFile)
   
-  return (settings["wikiAdminName"],settings["wikiAdminPass"])
+  return (settings["wikiAdminName"],settings["wikiAdminPass"],settings)
 def securePHP():
   """Ensures some basic php security settings are set
   """
@@ -301,7 +301,7 @@ def secureApache(documentRoot):
     "# If you've other scripting languages, disable them too.\n"
     "</Directory>\n")
   appendToFile(uploadDirSettings,"/etc/apache2/apache2.conf")
-  restatApache()
+  restartApache()
 def restartApache():
   """Restarts apache2
   """
@@ -318,10 +318,11 @@ def main():
   #adjust some mysql settings to improve security
   secureMySQL()
   
-  #adjust some apache settings to improve security
-  secureApache()
+  (adminUser,adminPassWd,settings)=setupMediaWiki(
+    settings={"enableUploads":True})
   
-  (adminUser,adminPassWd)=setupMediaWiki(settings={"enableUploads":True})
+  #adjust some apache settings to improve security
+  secureApache(settings["documentRoot"])
   
   print("Wiki Admin Username:"+adminUser)
   print("Wiki Admin password:"+adminPassWd)
