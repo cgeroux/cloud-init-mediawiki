@@ -451,6 +451,7 @@ def main():
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
   settings["server"]="http://"+args[0]
+  print(type(options.enableUploads))
   print("options.enableUploads=",options.enableUploads)
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
