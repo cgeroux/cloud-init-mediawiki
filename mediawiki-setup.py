@@ -169,7 +169,7 @@ def setupMediaWiki(settings={},dry=False):
     ,"wikiAdminName":adminName
     ,"wikiAdminPass":adminPassWd
     ,"server":"http://206.167.181.71"
-    ,"enableUploads":False
+    ,"enableUploads":"False"
     ,"logoURL":"$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     ,"extraConfigLines":[]
     ,"dbserver":"localhost"
@@ -249,7 +249,7 @@ def setupMediaWiki(settings={},dry=False):
   localSettingsFile=os.path.join(settings["documentRoot"],"LocalSettings.php")
   
   #enable file uploads
-  if settings["enableUploads"]:
+  if settings["enableUploads"]=="True":
     execute(replaceStrInFile,"$wgEnableUploads = false;"
       ,"$wgEnableUploads = true;",localSettingsFile,dry=dry)
   

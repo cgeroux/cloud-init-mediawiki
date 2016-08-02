@@ -3,6 +3,19 @@ heat_template_version: 2015-04-30
 description: Sets up a media-wiki server
 
 parameter_groups:
+  - other:
+    parameters:
+    - wiki-name
+    - admin-user
+    - enable-uploads
+    - logo-url
+    - wiki-version
+    - wiki-patch
+    - flavor
+    - image
+    - key
+    - private_network
+    - public_network
   - label: Wiki Permissions
     parameters:
     - read-permission
@@ -104,10 +117,6 @@ parameters:
       - allowed_values:
         - VLAN3337
         - net04_ext
-  Mappings:
-    uploads:
-      - True:"--uploads"
-      - False: ""
 resources:
   mediawiki-server:
     type: OS::Nova::Server
@@ -144,6 +153,7 @@ resources:
               - ["cd","/tmp"]
               - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
               - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py", "--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
+              - bash /tmp/finished.sh
           params:
             WIKIVERSION: {get_param: wiki-version}
             WIKIPATCH: {get_param: wiki-patch}
@@ -152,7 +162,7 @@ resources:
             EDITPERMISSION: {get_param: edit-permission}
             ACCCREATEPERMISSION: {get_param: acc-create-permission}
             ADMINUSER: {get_param: admin-user}
-            UPLOADS: "--uploads"
+            UPLOADS: {get_param: enable-uploads}
             LOGOURL: {get_param: logo-url}
             SERVERADDRESS: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
             wc_notify: {get_attr: ['mediawiki_wait_handle','curl_cli']}
@@ -188,6 +198,9 @@ resources:
       count: 1
       timeout: 1200
 outputs:
+  Admin_acct_info:
+    description: See log of mediawiki VM for the lines "Wiki Admin Username" and "Wiki Admin password" for the username and password for the wiki administrative account (Project->Compute->Instances->mediawiki-server->Log). May need to "View Full Log" if those lines don't appear after the VM has completed all the cloud-init setup.
+    value: ""
   public_ip:
     description: Floating IP address of server, can be used to ssh into server
     value: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
