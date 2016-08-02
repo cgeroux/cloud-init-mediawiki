@@ -13,4 +13,4 @@ packages:
 runcmd:
   - ["cd","/tmp"]
   - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
-  - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py"]
+  - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py", "--wik-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","UPLOADS","SERVERADDRESS"]

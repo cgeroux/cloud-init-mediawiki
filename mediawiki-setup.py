@@ -453,6 +453,7 @@ def main():
   settings["server"]="http://"+args[0]
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
+  settings["logoURL"]=options.logoURL
   
   
   #adjust some php settings to improve security
