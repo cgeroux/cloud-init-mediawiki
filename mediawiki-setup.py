@@ -8,6 +8,7 @@ import string
 import random
 import stat
 import re
+import socket
 
 def parseOptions():
   """Parses command line options
@@ -376,15 +377,68 @@ def restartApache():
   """
   
   subprocess.call(["service","apache2","restart"])
+def validateHostName(hostName):
+    """source:
+    https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+    
+    1) must be under 253 characters
+    2) each label (seperated by ".") must be between 1 and 63 characters long
+    3) each label must contain only ASCII letters 'a' - 'Z' (case-insensitive)
+      , '0' - '9', and '-'
+    4) labels must not start or end with a '-'
+    5) must be case-insensitive (i.e. will convert upper case to lower case)
+    
+    """
+    
+    allowed=set(string.ascii_lowercase+string.digits+"-"+string.ascii_uppercase)
+    
+    #1) check for overall length
+    if(len(hostName)>252):
+      raise Exception("hostName \""+hostName+"\" is longer than 253 characters")
+    
+    labels=hostName.split(".")
+    
+    
+    for label in labels:
+      
+      #2) check for length of label
+      if not (len(label) <= 63 and len(label) >= 1):
+        raise Exception("hostName label \""+label+"\" is "+str(len(label))
+        +" characters long which is not between 1 and 63 characters long")
+      
+      #3) check for invalid characters
+      if not (set(label) <= allowed):
+        raise Exception("hostName label \""+label
+          +"\" contains characters which are not allowed, \""
+          +str(set(label)-allowed)+"\"")
+      
+      #4) must not start with a '-'
+      if label[0]=='-':
+        raise Exception("label \""+label
+        +"\" starts with a '-' which is not allowed")
+    
+    return True
+def verifyServerName(serverName):
+  
+  #is it an IP
+  try:
+    socket.inet_aton(serverName)
+  except socket.error:
+    #is it a domain Name
+    if not validateHostName(serverName):
+      raise Exception(serverName+" is not a valid domain name or IP")
 def main():
   
   #parse command line options
   (options,args)=parseOptions()
   
   #ensure we have the right number of arguments
-  if len(args) == 1:
-    raise Excpetion("Must have at least one argument specifying the wiki "
+  if len(args) != 1:
+    raise Exception("Must have at least one argument specifying the wiki "
       +"server's IP or Domain name")
+  
+  #verify that the server name is valid (will not contain an http://)
+  verifyServerName(args[0])
   
   #map options onto settings
   dryRun=options.dryRun
@@ -396,7 +450,7 @@ def main():
   settings["wikiEditPerm"]=options.wikiEditPerm
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
-  settings["server"]=args[0]
+  settings["server"]="http://"+args[0]
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   
