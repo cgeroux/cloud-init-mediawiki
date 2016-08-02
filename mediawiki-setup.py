@@ -13,8 +13,13 @@ def parseOptions():
   """Parses command line options
   """
   
-  parser=op.OptionParser(usage="Usage %prog"
-    ,version="%prog 1.0",description="Sets up mediawiki")
+  parser=op.OptionParser(usage="Usage %prog SERVER"
+    ,version="%prog 1.0",description="Sets up mediawiki."
+    +"SERVER is the base url for the server, this should be your domain name "
+    +"which points to your machines IP, or your machines IP if you don't have "
+    +"a domain name. This script should probably be run with sudo as it will "
+    +"likely have to edit and read files which aren't editable or perhaps "
+    +"not even readable by standard users.")
   
   parser.add_option("--dry-run",dest="dryRun",action="store_true",default=False
     ,help="If set will not actually do anything, only print out what it would "
@@ -28,32 +33,32 @@ def parseOptions():
   parser.add_option("--name",dest="wikiName",action="store"
     ,type="string",default="CC User Wiki"
     ,help="Sets the name of the wiki [default: %default].")
+  permisionTypes=["public","user","sysop"]
   parser.add_option("--read-permission",dest="wikiReadPerm",action="store"
-    ,type="choice",choices=["public","user","sysop"],default="user"
+    ,type="choice",choices=permisionTypes,default="user"
     ,help="Sets who can read the wiki pages with the exception of the login "
-    +"page [default: %default].")
+    +"page. Available choices are "+str(permisionTypes)
+    +" [default: %default].")
   parser.add_option("--edit-permission",dest="wikiEditPerm",action="store"
-    ,type="choice",choices=["public","user","sysop"],default="user"
-    ,help="Sets who can edit the wiki pages [default: %default].")
+    ,type="choice",choices=permisionTypes,default="user"
+    ,help="Sets who can edit the wiki pages. Available choices are "
+    +str(permisionTypes)+" [default: %default].")
   parser.add_option("--account-create-permission",dest="wikiAccCreatePerm"
-    ,action="store",type="choice",choices=["public","user","sysop"]
-    ,default="sysop",help="Sets who can create user accounts the wiki pages "
-    +"[default: %default].")
+    ,action="store",type="choice",choices=permisionTypes
+    ,default="sysop",help="Sets who can create user accounts. Available "
+    +"choices are "+str(permisionTypes)+" [default: %default].")
   parser.add_option("--admin-user",dest="wikiAdminName",action="store"
     ,type="string",default=None
     ,help="Sets wiki administrator user name, by default it is randomly "
     +"generated.")
-  parser.add_option("--server",dest="server",action="store"
-    ,type="string",default="http://127.0.0.1"
-    ,help="Base url for the server [default: %default]")
   parser.add_option("--uploads",dest="enableUploads",action="store_true"
     ,default=False
     ,help="Enables file uploads [not default]")
-  parser.add_option("--log-url",dest="logoURL",action="store"
+  parser.add_option("--logo-url",dest="logoURL",action="store"
     ,default="$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     ,help="Set the url for the wiki logo [default: %default]")
   parser.add_option("--extra-config",dest="extraConfigLines",action="append"
-    ,help="Set extra configuration line by providing a string string for "
+    ,help="Set an extra configuration line by providing a string for "
     +"LocalSettings.php. Can be used multiple times to include multiple extra "
     +"configuration lines.")
   return parser.parse_args()
@@ -128,7 +133,7 @@ def genNameAndPass(length=16
   return (name,passwd)
 def execute(func,*args,dry=False,**kwargs):
   if not dry:
-    func(*args)
+    func(*args,**kwargs)
   else:
     commandStr=func.__name__+"("
     firstArg=True
@@ -376,6 +381,11 @@ def main():
   #parse command line options
   (options,args)=parseOptions()
   
+  #ensure we have the right number of arguments
+  if len(args) == 1:
+    raise Excpetion("Must have at least one argument specifying the wiki "
+      +"server's IP or Domain name")
+  
   #map options onto settings
   dryRun=options.dryRun
   settings={}
@@ -386,7 +396,7 @@ def main():
   settings["wikiEditPerm"]=options.wikiEditPerm
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
-  settings["server"]=options.server
+  settings["server"]=args[0]
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   
@@ -397,6 +407,7 @@ def main():
   #adjust some mysql settings to improve security
   secureMySQL(dry=dryRun)
   
+  #setup the wiki
   (adminUser,adminPassWd,settingsUsed)=setupMediaWiki(
     settings=settings,dry=dryRun)
   
