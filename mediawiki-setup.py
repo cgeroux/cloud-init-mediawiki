@@ -282,7 +282,7 @@ def setupMediaWiki(settings={},dry=False):
   if settings["wikiReadPerm"]=="user" or settings["wikiReadPerm"]=="sysop":
     execute(appendToFile,["$wgGroupPermissions['*']['read'] = false;\n"]
       ,localSettingsFile,dry=dry)
-    if settings["enableUploads"]:
+    if settings["enableUploads"]=="True":
       print("WARNING: read permission not public but uploads are enabled."
         +" The public will still be able to see uploads if they know the "
         +"correct url to go directly to the file.")
@@ -451,8 +451,6 @@ def main():
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
   settings["server"]="http://"+args[0]
-  print(type(options.enableUploads))
-  print("options.enableUploads=",options.enableUploads)
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   settings["logoURL"]=options.logoURL
