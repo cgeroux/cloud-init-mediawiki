@@ -52,9 +52,9 @@ def parseOptions():
     ,type="string",default=None
     ,help="Sets wiki administrator user name, by default it is randomly "
     +"generated.")
-  parser.add_option("--uploads",dest="enableUploads",action="store_true"
-    ,default=False
-    ,help="Enables file uploads [not default]")
+  parser.add_option("--uploads",dest="enableUploads",action="store"
+    ,type="string",default="false"
+    ,help="Enables file uploads by giving a \"true\" value [default: %default]")
   parser.add_option("--logo-url",dest="logoURL",action="store"
     ,default="$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     ,help="Set the url for the wiki logo [default: %default]")
@@ -451,6 +451,7 @@ def main():
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
   settings["server"]="http://"+args[0]
+  print("options.enableUploads=",options.enableUploads)
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   settings["logoURL"]=options.logoURL

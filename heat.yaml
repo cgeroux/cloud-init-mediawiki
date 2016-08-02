@@ -1,0 +1,201 @@
+heat_template_version: 2015-04-30
+
+description: Sets up a media-wiki server
+
+parameter_groups:
+  - label: Wiki Permissions
+    parameters:
+    - read-permission
+    - edit-permission
+    - acc-create-permission
+
+parameters:
+  wiki-name:
+    type: string
+    label: Wiki Name
+    description: Name of the wiki
+    default: "CC User Wiki"
+  read-permission:
+    type: string
+    label: Read permission
+    description: Who is able to read the wiki pages, with the exception of the login page.
+    constraints:
+      - allowed_values:
+        - public
+        - user
+        - sysop
+    default: user
+  edit-permission:
+    type: string
+    label: Edit permission
+    description: Who is able to edit the wiki pages.
+    constraints:
+      - allowed_values:
+        - public
+        - user
+        - sysop
+    default: user
+  acc-create-permission:
+    type: string
+    label: Account creation permission
+    description: Who is able to create new user accounts.
+    constraints:
+      - allowed_values:
+        - public
+        - user
+        - sysop
+    default: sysop
+  admin-user:
+    type: string
+    label: Wiki administrator 
+    description: The account name of the wiki administrator.
+  enable-uploads:
+    type: boolean
+    label: Enable uploads
+    description: Enables anyone with edit permission to upload files to the server.
+  logo-url:
+    type: string
+    label: Wiki Logo URL
+    description: URL of the logo to use for the wiki.
+    default: $wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png
+  wiki-version:
+    type: string
+    label: Mediawiki Version
+    description: Version of Mediawiki to download and install
+    default: "1.27"
+  wiki-patch:
+    type: string
+    label: Mediawiki Patch
+    description: Patch version of mediawiki to download and install
+    default: "0"
+  flavor:
+    type: string
+    label: Flavor
+    description: Hardware flavor to be used for the server
+    constraints:
+      - custom_constraint: nova.flavor
+    default: c1-7.5gb-30
+  image:
+    type: string
+    label: Image
+    description: Base image to use to install mediawiki on
+    constraints:
+      - custom_constraint: glance.image
+    default: ubuntu-server-14.04-amd64
+  key:
+    type: string
+    label: Key-pair name
+    description: Name of key-pair to be used for master and slave nodes
+    default: thekey
+    constraints:
+      - custom_constraint: nova.keypair
+  private_network:
+    type: string
+    label: Private network name or ID
+    description: Network to attach instance to.
+    constraints:
+      - custom_constraint: neutron.network
+  public_network:
+    type: string
+    description: Network to use for obtaining public IP (VLAN3337 for west-cloud, net04_ext for east-cloud)
+    label: Public Network
+    default: VLAN3337
+    constraints:
+      - allowed_values:
+        - VLAN3337
+        - net04_ext
+  Mappings:
+    uploads:
+      - True:"--uploads"
+      - False: ""
+resources:
+  mediawiki-server:
+    type: OS::Nova::Server
+    properties:
+      flavor: {get_param: flavor}
+      image: {get_param: image}
+      key_name: {get_param: key}
+      name: mediawiki-server
+      networks:
+        - port: {get_resource: mediawiki_port}
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #cloud-config
+            package_update: true
+            package_upgrade: true
+            packages:
+              - apache2
+              - git
+              - php5
+              - mysql-server
+              - php5-mysql
+              - php5-apcu
+              - php5-gd
+              - php5-intl
+            write_files:
+              - content: |
+                  #!/bin/bash
+                  wc_notify --data-binary '{"status": "SUCCESS", "reason": "mediawiki server CI done"}'
+                path: /tmp/finished.sh
+                permissions: "0755"
+            runcmd:
+              - ["cd","/tmp"]
+              - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
+              - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py", "--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
+          params:
+            WIKIVERSION: {get_param: wiki-version}
+            WIKIPATCH: {get_param: wiki-patch}
+            WIKINAME: {get_param: wiki-name}
+            READPERMISSION: {get_param: read-permission}
+            EDITPERMISSION: {get_param: edit-permission}
+            ACCCREATEPERMISSION: {get_param: acc-create-permission}
+            ADMINUSER: {get_param: admin-user}
+            UPLOADS: "--uploads"
+            LOGOURL: {get_param: logo-url}
+            SERVERADDRESS: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
+            wc_notify: {get_attr: ['mediawiki_wait_handle','curl_cli']}
+  mediawiki_port:
+    type: OS::Neutron::Port
+    properties:
+      network: {get_param: private_network}
+      security_groups: [{get_resource: mediawiki_security},default]
+  mediawiki_security:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: mediawiki_security
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+  mediawiki_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      port_id: {get_resource: mediawiki_port}
+      floating_network: {get_param: public_network}
+  mediawiki_wait_handle:
+    type: OS::Heat::WaitConditionHandle
+  mediawiki_wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: {get_resource: mediawiki_wait_handle}
+      count: 1
+      timeout: 1200
+outputs:
+  public_ip:
+    description: Floating IP address of server, can be used to ssh into server
+    value: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
+  wiki-url:
+    description: Link to wiki
+    value:
+      str_replace:
+        template: http://<hostip>
+        params:
+          <hostip>: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
+
