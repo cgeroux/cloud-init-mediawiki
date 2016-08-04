@@ -3,7 +3,8 @@ heat_template_version: 2015-04-30
 description: Sets up a media-wiki server
 
 parameter_groups:
-  - other:
+  - label: Other
+    description: Other parameters
     parameters:
     - wiki-name
     - admin-user
@@ -14,9 +15,12 @@ parameter_groups:
     - flavor
     - image
     - key
+    - volume_name
+    - volume_size
     - private_network
     - public_network
   - label: Wiki Permissions
+    description: Wiki permissions settings
     parameters:
     - read-permission
     - edit-permission
@@ -102,6 +106,14 @@ parameters:
     default: thekey
     constraints:
       - custom_constraint: nova.keypair
+  volume_name:
+    type: string
+    label: Volume Name
+    description: Name of the volume to boot from
+  volume_size:
+    type: number
+    label: Volume Size
+    description: Size of the volume in GB
   private_network:
     type: string
     label: Private network name or ID
@@ -122,9 +134,9 @@ resources:
     type: OS::Nova::Server
     properties:
       flavor: {get_param: flavor}
-      image: {get_param: image}
       key_name: {get_param: key}
       name: mediawiki-server
+      block_device_mapping: [{device_name: "vda", volume_id: {get_resource: mediawiki_volume}, delete_on_termination: "false"}]
       networks:
         - port: {get_resource: mediawiki_port}
       user_data_format: RAW
@@ -197,6 +209,12 @@ resources:
       handle: {get_resource: mediawiki_wait_handle}
       count: 1
       timeout: 1200
+  mediawiki_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: {get_param: volume_size}
+      image: {get_param: image}
+      name: {get_param: volume_name}
 outputs:
   Admin_acct_info:
     description: See log of mediawiki VM for the lines "Wiki Admin Username" and "Wiki Admin password" for the username and password for the wiki administrative account (Project->Compute->Instances->mediawiki-server->Log). May need to "View Full Log" if those lines don't appear after the VM has completed all the cloud-init setup.
