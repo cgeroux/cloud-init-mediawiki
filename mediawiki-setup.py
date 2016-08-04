@@ -9,6 +9,7 @@ import random
 import stat
 import re
 import socket
+import sys
 
 def parseOptions():
   """Parses command line options
@@ -55,6 +56,9 @@ def parseOptions():
   parser.add_option("--uploads",dest="enableUploads",action="store"
     ,type="string",default="false"
     ,help="Enables file uploads by giving a \"true\" value [default: %default]")
+  parser.add_option("--ssl",dest="enableSSL",action="store"
+    ,type="string",default="false"
+    ,help="Enables SSL by giving a \"true\" value [default: %default]")
   parser.add_option("--logo-url",dest="logoURL",action="store"
     ,default="$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     ,help="Set the url for the wiki logo [default: %default]")
@@ -108,6 +112,30 @@ def replaceStrInFileRe(pattern,replacement,fileName,maxOccurs=None):
   file.write(fileText)
   file.close()
   return numMatches
+def commentOutLineMatching(pattern,fileName,maxOccurs=None):
+  """
+  Adds a # to the begning of any line which matches pattern
+  """
+  
+  file=open(fileName,mode='r')
+  pattern=re.compile(pattern)
+  fileText=""
+  numMatches=0
+  if maxOccurs==None:
+    maxOccurs=sys.maxsize
+    
+  for line in file:
+    
+    if pattern.match(line) and numMatches<maxOccurs:
+      fileText+="#"+line
+      numMatches+=1
+    else:
+      fileText+=line
+  file.close()
+  file=open(fileName,mode='w')
+  file.write(fileText)
+  file.close()
+  return numMatches
 def appendToFile(strsToAppend,fileName):
   """Append multiple string to the end of a file
   """
@@ -134,7 +162,7 @@ def genNameAndPass(length=16
   return (name,passwd)
 def execute(func,*args,dry=False,**kwargs):
   if not dry:
-    func(*args,**kwargs)
+    return func(*args,**kwargs)
   else:
     commandStr=func.__name__+"("
     firstArg=True
@@ -152,6 +180,7 @@ def execute(func,*args,dry=False,**kwargs):
         commandStr+=","+key+"="+str(kwargs[key])
     commandStr+=")"
     print(commandStr)
+    return None
 def setupMediaWiki(settings={},dry=False):
   """Downloads media wiki and puts it into document root
   """
@@ -320,25 +349,25 @@ def securePHP(dry=False):
   """
   
   #ensure register_globals is disabled
-  numReplaces=replaceStrInFileRe(
+  numReplaces=execute(replaceStrInFileRe,
     "(?<!([^\s]))register_globals[\s]*=[\s]*((O|o)n|(O|o)ff)"
-    ,"register_globals = Off","/etc/php5/apache2/php.ini")
+    ,"register_globals = Off","/etc/php5/apache2/php.ini",dry=dry)
   if numReplaces==0:#if no strings replaced add it
     execute(appendToFile,"register_globals = Off\n","/etc/php5/apache2/php.ini"
       ,dry=dry)
   
   #disable allow_url_fopen
-  numReplaces=replaceStrInFileRe(
+  numReplaces=execute(replaceStrInFileRe,
     "(?<!([^\s]))allow_url_fopen[\s]*=[\s]*((O|o)n|(O|o)ff)"
-    ,"allow_url_fopen = Off","/etc/php5/apache2/php.ini")
+    ,"allow_url_fopen = Off","/etc/php5/apache2/php.ini",dry=dry)
   if numReplaces==0:#if no strings replaced add it
     execute(appendToFile,"allow_url_fopen = Off\n","/etc/php5/apache2/php.ini"
       ,dry=dry)
   
   #ensure session.use_trans_sid is off
-  numReplaces=replaceStrInFileRe(
+  numReplaces=execute(replaceStrInFileRe,
     "(?<!([^\s]))session.use_trans_sid[\s]*=[\s]*[0-1]"
-    ,"session.use_trans_sid = 0","/etc/php5/apache2/php.ini")
+    ,"session.use_trans_sid = 0","/etc/php5/apache2/php.ini",dry=dry)
   if numReplaces==0:#if no strings replaced add it
     execute(appendToFile,"session.use_trans_sid = 0\n"
       ,"/etc/php5/apache2/php.ini",dry=dry)
@@ -372,12 +401,12 @@ def secureApache(documentRoot,dry=False):
     "</Directory>\n")
   execute(appendToFile,uploadDirSettings,"/etc/apache2/apache2.conf",dry=dry)
   execute(restartApache,dry=dry)
-def restartApache():
+def restartApache(dry=False):
   """Restarts apache2
   """
   
-  subprocess.call(["service","apache2","restart"])
-def validateHostName(hostName):
+  execute(subprocess.call,["service","apache2","restart"],dry=dry)
+def validateDomainName(hostName):
     """source:
     https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
     
@@ -398,7 +427,6 @@ def validateHostName(hostName):
     
     labels=hostName.split(".")
     
-    
     for label in labels:
       
       #2) check for length of label
@@ -418,15 +446,81 @@ def validateHostName(hostName):
         +"\" starts with a '-' which is not allowed")
     
     return True
-def verifyServerName(serverName):
+def isIP(ipToTest):
+  """
+  Returns tru if give ipToTest is an ip, else returns false
+  """
   
-  #is it an IP
   try:
-    socket.inet_aton(serverName)
+    socket.inet_aton(ipToTest)
+    return True
   except socket.error:
-    #is it a domain Name
-    if not validateHostName(serverName):
-      raise Exception(serverName+" is not a valid domain name or IP")
+    return False
+def ipAddressToCCCloudDomain(ipAddress):
+  """Converts an IPv4 address to a Compute Canada Cloud Domain name
+  """
+  
+  domainName=ipAddress.replace(".","-")
+  domainName+=".cloud.computecanada.ca"
+  return domainName
+def configureSSL(domainName,dry=False):
+  """Configures apache to use a self-signed SSL certificate
+  """
+  
+  #enable ssl mod
+  execute(subprocess.call,["a2enmod","ssl"],dry=dry)
+  restartApache(dry=dry)
+  
+  #create input string for openssl command
+  inputStr='CA\nNova Scotia\nHalifax\nCompute Canada\nACENET\n'+domainName+'\nno@email.com\n'
+  
+  #create ssl cert
+  #Note that dry is fixed to be False, creating the cert doesn't really cause a problem except 
+  #it might overwrite an existing cert, and if it isn't actually executed the following steps will not be able to execute
+  p=execute(subprocess.Popen,["openssl","req","-x509","-nodes"
+    ,"-days","3650"
+    ,"-newkey","rsa:2048"
+    ,"-keyout","/etc/ssl/private/server.key"
+    ,"-out","/etc/ssl/certs/server.crt"]
+    ,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.STDOUT,dry=dry)
+  
+  #have to handle dry runs in a special way as this command (dry or not) 
+  #depends on p not being None
+  if not dry:
+    output=execute(p.communicate,input=inputStr.encode('utf-8'),dry=dry)[0]
+  else:
+    print("p.communicate(input="+inputStr+")")
+  
+  #Set correct ownership and permission of key
+  execute(subprocess.call,["sudo","chown","root:ssl-cert","etc/ssl/private/server.key"],dry=dry)
+  execute(subprocess.call,["sudo","chmod","640","etc/ssl/private/server.key"],dry=dry)
+  
+  #comment out any previous settings
+  execute(commentOutLineMatching,"SSLCertificateFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
+  execute(commentOutLineMatching,"SSLCertificateKeyFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
+  execute(commentOutLineMatching,"SSLCertificateChainFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
+  
+  #add settings before </VirtualHost>
+  execute(replaceStrInFileRe,"</VirtualHost>"
+    ,"\t\tSSLCertificateFile      /etc/ssl/certs/server.crt\n"
+    +"\t\tSSLCertificateKeyFile /etc/ssl/private/server.key\n"
+    +"\t\tSSLCertificateChainFile /etc/ssl/certs/server.crt\n"
+    +"\t\tRedirect permanent / https://"+domainName+"\n"
+    +"\t\tServerName "+domainName+"\n"
+    +"\t\tServerAlias www."+domainName+"\n"
+    +"\t\tSSLProtocol all -SSLv2 -SSLv3\n"
+    +"\t\tSSLCipherSuite HIGH:MEDIUM:!aNULL:!MD5:!SEED:!IDEA:!RC4\n"
+    +"SSLHonorCipherOrder on\n"
+    +"\t</VirtualHost>",dry=dry)
+  
+  
+  #add redirect to https
+  execute(replaceStrInFileRe,"</VirtualHost>"
+    ,"\t\tRedirect permanent / https://"+domainName+"\n",dry=dry)
+  
+  #enable ssl on our virtual host
+  execute(subprocess.call,["a2ensite","default-ssl.conf"])
+  execute(subprocess.call,["service","apache2","restart"])
 def main():
   
   #parse command line options
@@ -437,8 +531,15 @@ def main():
     raise Exception("Must have at least one argument specifying the wiki "
       +"server's IP or Domain name")
   
+  #set domain name
+  domainName=args[0]
+  
+  #if domainName is an IP convert it to a Compute Canada Cloud domain name
+  if isIP(domainName):
+    domainName=ipAddressToCCCloudDomain(domainName)
+  
   #verify that the server name is valid (will not contain an http://)
-  verifyServerName(args[0])
+  validateDomainName(domainName)
   
   #map options onto settings
   dryRun=options.dryRun
@@ -450,11 +551,10 @@ def main():
   settings["wikiEditPerm"]=options.wikiEditPerm
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
-  settings["server"]="http://"+args[0]
+  settings["server"]="http://"+domainName
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   settings["logoURL"]=options.logoURL
-  
   
   #adjust some php settings to improve security
   securePHP(dry=dryRun)
@@ -468,6 +568,10 @@ def main():
   
   #adjust some apache settings to improve security
   secureApache(settingsUsed["documentRoot"],dry=dryRun)
+  
+  #
+  if options.enableSSL:
+    configureSSL(domainName,dry=dryRun)
   
   print("Wiki Admin Username:"+adminUser)
   print("Wiki Admin password:"+adminPassWd)
