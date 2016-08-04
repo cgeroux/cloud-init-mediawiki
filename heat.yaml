@@ -167,7 +167,7 @@ resources:
               - ["cd","/tmp"]
               - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
               - ["git","checkout","dev"]
-              - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py","--dry-run" "--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
+              - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py","--dry-run" ,"--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
               - bash /tmp/finished.sh
           params:
             WIKIVERSION: {get_param: wiki-version}
@@ -229,7 +229,7 @@ outputs:
     description: Link to wiki
     value:
       str_replace:
-        template: http://<hostip>
+        template: https://<hostip>
         params:
           <hostip>: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
 
