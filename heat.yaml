@@ -150,7 +150,7 @@ resources:
                 path: /tmp/finished.sh
                 permissions: "0755"
             runcmd:
-              - echo -n "127.0.1.1" >>/etc/hosts
+              - echo -n "127.0.1.1 " >>/etc/hosts
               - cat /etc/hostname >> /etc/hosts
               - ["cd","/tmp"]
               - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
