@@ -150,6 +150,8 @@ resources:
                 path: /tmp/finished.sh
                 permissions: "0755"
             runcmd:
+              - ["echo","-n","127.0.1.1 ",">>","/etc/hosts"]
+              - ["cat","/etc/hostname",">>","/etc/hosts"]
               - ["cd","/tmp"]
               - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
               - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py", "--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
