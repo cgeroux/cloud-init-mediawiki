@@ -93,17 +93,15 @@ parameters:
   flavor:
     type: string
     label: Flavor
-    description: Hardware flavor to be used for the server
+    description: Hardware flavor to be used for the server,  it is best to select a flavor starting with a "p" for persistent
     constraints:
       - custom_constraint: nova.flavor
-    default: c1-7.5gb-30
   image:
     type: string
     label: Image
-    description: Base image to use to install mediawiki on
+    description: Base image to use to install mediawiki on, it is best to select "uUbuntu_14.04_Trusty-amd64-20150708" on east cloud and "ubuntu-14.04-amd64" on west cloud others may work but haven't been tested.
     constraints:
       - custom_constraint: glance.image
-    default: ubuntu-server-14.04-amd64
   key:
     type: string
     label: Key-pair name
