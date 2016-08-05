@@ -496,9 +496,9 @@ def configureSSL(domainName,dry=False):
   execute(subprocess.call,["sudo","chmod","640","/etc/ssl/private/server.key"],dry=dry)
   
   #comment out any previous settings
-  execute(commentOutLineMatching,"SSLCertificateFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
-  execute(commentOutLineMatching,"SSLCertificateKeyFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
-  execute(commentOutLineMatching,"SSLCertificateChainFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
+  execute(commentOutLineMatching,".*SSLCertificateFile.*","/etc/apache2/sites-available/default-ssl.conf",dry=dry)#not matching
+  execute(commentOutLineMatching,".*SSLCertificateKeyFile.*","/etc/apache2/sites-available/default-ssl.conf",dry=dry)#not matching
+  execute(commentOutLineMatching,".*SSLCertificateChainFile.*","/etc/apache2/sites-available/default-ssl.conf",dry=dry)#not matching
   
   #add settings before </VirtualHost>
   execute(replaceStrInFileRe,"</VirtualHost>"
@@ -510,13 +510,13 @@ def configureSSL(domainName,dry=False):
     +"\t\tServerAlias www."+domainName+"\n"
     +"\t\tSSLProtocol all -SSLv2 -SSLv3\n"
     +"\t\tSSLCipherSuite HIGH:MEDIUM:!aNULL:!MD5:!SEED:!IDEA:!RC4\n"
-    +"SSLHonorCipherOrder on\n"
+    +"\t\tSSLHonorCipherOrder on\n"
     +"\t</VirtualHost>","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
   
   
   #add redirect to https
   execute(replaceStrInFileRe,"</VirtualHost>"
-    ,"\t\tRedirect permanent / https://"+domainName+"\n\t</VirtualHost>\n"
+    ,"\tRedirect permanent / https://"+domainName+"\n</VirtualHost>\n"
     ,"/etc/apache2/sites-available/000-default.conf",dry=dry)
   
   #enable ssl on our virtual host
