@@ -197,7 +197,7 @@ def setupMediaWiki(settings={},dry=False):
     ,"wikiAccCreatePerm":"sysop"    #public, user, sysop
     ,"wikiAdminName":adminName
     ,"wikiAdminPass":adminPassWd
-    ,"server":"http://206.167.181.71"
+    ,"server":"http://127.0.0.1/"
     ,"enableUploads":"False"
     ,"logoURL":"$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     ,"extraConfigLines":[]
@@ -550,7 +550,7 @@ def main():
   settings["wikiEditPerm"]=options.wikiEditPerm
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
-  settings["server"]="http://"+domainName
+  settings["server"]="http://"+domainName+"/"
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   settings["logoURL"]=options.logoURL
