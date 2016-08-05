@@ -492,8 +492,8 @@ def configureSSL(domainName,dry=False):
     print("p.communicate(input="+inputStr+")")
   
   #Set correct ownership and permission of key
-  execute(subprocess.call,["sudo","chown","root:ssl-cert","etc/ssl/private/server.key"],dry=dry)
-  execute(subprocess.call,["sudo","chmod","640","etc/ssl/private/server.key"],dry=dry)
+  execute(subprocess.call,["sudo","chown","root:ssl-cert","/etc/ssl/private/server.key"],dry=dry)
+  execute(subprocess.call,["sudo","chmod","640","/etc/ssl/private/server.key"],dry=dry)
   
   #comment out any previous settings
   execute(commentOutLineMatching,"SSLCertificateFile","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
@@ -516,7 +516,8 @@ def configureSSL(domainName,dry=False):
   
   #add redirect to https
   execute(replaceStrInFileRe,"</VirtualHost>"
-    ,"\t\tRedirect permanent / https://"+domainName+"\n",dry=dry)
+    ,"\t\tRedirect permanent / https://"+domainName+"\n\t</VirtualHost>\n"
+    ,"/etc/apache2/sites-available/000-default.conf",dry=dry)
   
   #enable ssl on our virtual host
   execute(subprocess.call,["a2ensite","default-ssl.conf"])
