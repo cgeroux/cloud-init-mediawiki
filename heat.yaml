@@ -3,7 +3,8 @@ heat_template_version: 2015-04-30
 description: Sets up a media-wiki server
 
 parameter_groups:
-  - other:
+  - label: Other
+    description: Other parameters
     parameters:
     - wiki-name
     - admin-user
@@ -14,9 +15,13 @@ parameter_groups:
     - flavor
     - image
     - key
+    - volume_name
+    - volume_size
     - private_network
     - public_network
+    - enable-ssl
   - label: Wiki Permissions
+    description: Wiki permissions settings
     parameters:
     - read-permission
     - edit-permission
@@ -66,6 +71,10 @@ parameters:
     type: boolean
     label: Enable uploads
     description: Enables anyone with edit permission to upload files to the server.
+  enable-ssl:
+    type: boolean
+    label: Enable SSL
+    description: Configures TSL (Transport Security Layer) formerly SSL with a self-signed certificate. This will encrypt all data sent to and from the web-server, however, since the certificate is self-signed, it is not registered with a Signing Authority and will appear as an untrusted website. For production sites it is recommended that you install a certificate signed by a recognized Signing Authority.
   logo-url:
     type: string
     label: Wiki Logo URL
@@ -84,17 +93,15 @@ parameters:
   flavor:
     type: string
     label: Flavor
-    description: Hardware flavor to be used for the server
+    description: Hardware flavor to be used for the server,  it is best to select a flavor starting with a "p" for persistent
     constraints:
       - custom_constraint: nova.flavor
-    default: c1-7.5gb-30
   image:
     type: string
     label: Image
-    description: Base image to use to install mediawiki on
+    description: Base image to use to install mediawiki on, it is best to select "Ubuntu_14.04_Trusty-amd64-20150708" on east cloud and "ubuntu-14.04-amd64" on west cloud others may work but haven't been tested.
     constraints:
       - custom_constraint: glance.image
-    default: ubuntu-server-14.04-amd64
   key:
     type: string
     label: Key-pair name
@@ -102,6 +109,16 @@ parameters:
     default: thekey
     constraints:
       - custom_constraint: nova.keypair
+  volume_name:
+    type: string
+    label: Volume Name
+    default: mediawiki_root
+    description: Name of the volume to boot from
+  volume_size:
+    type: number
+    label: Volume Size
+    default: 20
+    description: Size of the volume in GB
   private_network:
     type: string
     label: Private network name or ID
@@ -122,9 +139,9 @@ resources:
     type: OS::Nova::Server
     properties:
       flavor: {get_param: flavor}
-      image: {get_param: image}
       key_name: {get_param: key}
       name: mediawiki-server
+      block_device_mapping: [{device_name: "vda", volume_id: {get_resource: mediawiki_volume}, delete_on_termination: "false"}]
       networks:
         - port: {get_resource: mediawiki_port}
       user_data_format: RAW
@@ -150,11 +167,13 @@ resources:
                 path: /tmp/finished.sh
                 permissions: "0755"
             runcmd:
-              - echo -n "127.0.1.1" >>/etc/hosts
+              - echo -n "127.0.1.1 " >>/etc/hosts
               - cat /etc/hostname >> /etc/hosts
               - ["cd","/tmp"]
               - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
-              - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py", "--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
+              - ["cd","cloud-init-mediawiki"]
+              - ["git","checkout","dev"]
+              - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py","--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--ssl","SSL","--logo-url","LOGOURL","SERVERADDRESS"]
               - bash /tmp/finished.sh
           params:
             WIKIVERSION: {get_param: wiki-version}
@@ -167,6 +186,7 @@ resources:
             UPLOADS: {get_param: enable-uploads}
             LOGOURL: {get_param: logo-url}
             SERVERADDRESS: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
+            SSL: {get_param: enable-ssl}
             wc_notify: {get_attr: ['mediawiki_wait_handle','curl_cli']}
   mediawiki_port:
     type: OS::Neutron::Port
@@ -186,6 +206,10 @@ resources:
           protocol: tcp
           port_range_min: 80
           port_range_max: 80
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
   mediawiki_floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
@@ -199,6 +223,12 @@ resources:
       handle: {get_resource: mediawiki_wait_handle}
       count: 1
       timeout: 1200
+  mediawiki_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: {get_param: volume_size}
+      image: {get_param: image}
+      name: {get_param: volume_name}
 outputs:
   Admin_acct_info:
     description: See log of mediawiki VM for the lines "Wiki Admin Username" and "Wiki Admin password" for the username and password for the wiki administrative account (Project->Compute->Instances->mediawiki-server->Log). May need to "View Full Log" if those lines don't appear after the VM has completed all the cloud-init setup.
