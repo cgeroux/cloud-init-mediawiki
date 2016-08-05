@@ -94,26 +94,27 @@ parameters:
     type: string
     label: Flavor
     description: Hardware flavor to be used for the server,  it is best to select a flavor starting with a "p" for persistent
+    default: p1-0.75gb
     constraints:
       - custom_constraint: nova.flavor
   image:
     type: string
     label: Image
     description: Base image to use to install mediawiki on, it is best to select "Ubuntu_14.04_Trusty-amd64-20150708" on east cloud and "ubuntu-14.04-amd64" on west cloud others may work but haven't been tested.
+    default: Ubuntu_14.04_Trusty-amd64-20150708
     constraints:
       - custom_constraint: glance.image
   key:
     type: string
     label: Key-pair name
     description: Name of key-pair to be used for master and slave nodes
-    default: thekey
     constraints:
       - custom_constraint: nova.keypair
   volume_name:
     type: string
     label: Volume Name
     default: mediawiki_root
-    description: Name of the volume to boot from
+    description: Name of the volume to boot from, will be created
   volume_size:
     type: number
     label: Volume Size
@@ -129,7 +130,7 @@ parameters:
     type: string
     description: Network to use for obtaining public IP (VLAN3337 for west-cloud, net04_ext for east-cloud)
     label: Public Network
-    default: VLAN3337
+    default: net04_ext
     constraints:
       - allowed_values:
         - VLAN3337
