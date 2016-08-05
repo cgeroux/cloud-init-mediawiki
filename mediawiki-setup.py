@@ -500,19 +500,17 @@ def configureSSL(domainName,dry=False):
   execute(commentOutLineMatching,".*SSLCertificateKeyFile.*","/etc/apache2/sites-available/default-ssl.conf",dry=dry)#not matching
   execute(commentOutLineMatching,".*SSLCertificateChainFile.*","/etc/apache2/sites-available/default-ssl.conf",dry=dry)#not matching
   
-  #add settings before </VirtualHost>
+  #add settings before for improved security </VirtualHost>
   execute(replaceStrInFileRe,"</VirtualHost>"
     ,"\t\tSSLCertificateFile      /etc/ssl/certs/server.crt\n"
     +"\t\tSSLCertificateKeyFile /etc/ssl/private/server.key\n"
     +"\t\tSSLCertificateChainFile /etc/ssl/certs/server.crt\n"
-    +"\t\tRedirect permanent / https://"+domainName+"\n"
     +"\t\tServerName "+domainName+"\n"
     +"\t\tServerAlias www."+domainName+"\n"
     +"\t\tSSLProtocol all -SSLv2 -SSLv3\n"
     +"\t\tSSLCipherSuite HIGH:MEDIUM:!aNULL:!MD5:!SEED:!IDEA:!RC4\n"
     +"\t\tSSLHonorCipherOrder on\n"
     +"\t</VirtualHost>","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
-  
   
   #add redirect to https
   execute(replaceStrInFileRe,"</VirtualHost>"
