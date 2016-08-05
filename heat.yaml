@@ -206,6 +206,10 @@ resources:
           protocol: tcp
           port_range_min: 80
           port_range_max: 80
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
   mediawiki_floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
@@ -236,7 +240,7 @@ outputs:
     description: Link to wiki
     value:
       str_replace:
-        template: https://<hostip>
+        template: http://<hostip>
         params:
           <hostip>: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
 
