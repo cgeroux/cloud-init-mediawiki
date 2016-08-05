@@ -99,7 +99,7 @@ parameters:
   image:
     type: string
     label: Image
-    description: Base image to use to install mediawiki on, it is best to select "uUbuntu_14.04_Trusty-amd64-20150708" on east cloud and "ubuntu-14.04-amd64" on west cloud others may work but haven't been tested.
+    description: Base image to use to install mediawiki on, it is best to select "Ubuntu_14.04_Trusty-amd64-20150708" on east cloud and "ubuntu-14.04-amd64" on west cloud others may work but haven't been tested.
     constraints:
       - custom_constraint: glance.image
   key:
