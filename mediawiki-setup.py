@@ -511,7 +511,7 @@ def configureSSL(domainName,dry=False):
     +"\t\tSSLProtocol all -SSLv2 -SSLv3\n"
     +"\t\tSSLCipherSuite HIGH:MEDIUM:!aNULL:!MD5:!SEED:!IDEA:!RC4\n"
     +"SSLHonorCipherOrder on\n"
-    +"\t</VirtualHost>",dry=dry)
+    +"\t</VirtualHost>","/etc/apache2/sites-available/default-ssl.conf",dry=dry)
   
   
   #add redirect to https
