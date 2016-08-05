@@ -166,6 +166,7 @@ resources:
               - cat /etc/hostname >> /etc/hosts
               - ["cd","/tmp"]
               - ["git","clone","https://github.com/cgeroux/cloud-init-mediawiki.git"]
+              - ["cd","cloud-init-mediawiki"]
               - ["git","checkout","dev"]
               - ["/tmp/cloud-init-mediawiki/mediawiki-setup.py","--dry-run" ,"--wiki-version","WIKIVERSION","--wiki-patch","WIKIPATCH","--name","WIKINAME","--read-permission","READPERMISSION","--edit-permission","EDITPERMISSION","--account-create-permission","ACCCREATEPERMISSION","--admin-user","ADMINUSER","--uploads","UPLOADS","--logo-url","LOGOURL","SERVERADDRESS"]
               - bash /tmp/finished.sh
