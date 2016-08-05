@@ -502,7 +502,7 @@ def configureSSL(domainName,dry=False):
   
   #add settings before for improved security </VirtualHost>
   execute(replaceStrInFileRe,"</VirtualHost>"
-    ,"\t\tSSLCertificateFile      /etc/ssl/certs/server.crt\n"
+    ,"\tSSLCertificateFile      /etc/ssl/certs/server.crt\n"
     +"\t\tSSLCertificateKeyFile /etc/ssl/private/server.key\n"
     +"\t\tSSLCertificateChainFile /etc/ssl/certs/server.crt\n"
     +"\t\tServerName "+domainName+"\n"
@@ -514,7 +514,7 @@ def configureSSL(domainName,dry=False):
   
   #add redirect to https
   execute(replaceStrInFileRe,"</VirtualHost>"
-    ,"\tRedirect permanent / https://"+domainName+"\n</VirtualHost>\n"
+    ,"\tRedirect permanent / https://"+domainName+"/\n</VirtualHost>\n"
     ,"/etc/apache2/sites-available/000-default.conf",dry=dry)
   
   #enable ssl on our virtual host
@@ -550,7 +550,7 @@ def main():
   settings["wikiEditPerm"]=options.wikiEditPerm
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
-  settings["server"]="http://"+domainName+"/"
+  settings["server"]="http://"+domainName
   settings["enableUploads"]=options.enableUploads
   settings["extraConfigLines"]=options.extraConfigLines
   settings["logoURL"]=options.logoURL
