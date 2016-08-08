@@ -18,7 +18,7 @@ parameter_groups:
     - volume_name
     - volume_size
     - private_network
-    - public_networkk
+    - public_network
     - enable-ssl
   - label: Wiki Permissions
     description: Wiki permissions settings
