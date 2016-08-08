@@ -54,10 +54,10 @@ def parseOptions():
     ,help="Sets wiki administrator user name, by default it is randomly "
     +"generated.")
   parser.add_option("--uploads",dest="enableUploads",action="store"
-    ,type="string",default="false"
+    ,type="string",default="False"
     ,help="Enables file uploads by giving a \"true\" value [default: %default]")
   parser.add_option("--ssl",dest="enableSSL",action="store"
-    ,type="string",default="false"
+    ,type="string",default="False"
     ,help="Enables SSL by giving a \"true\" value [default: %default]")
   parser.add_option("--logo-url",dest="logoURL",action="store"
     ,default="$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
@@ -569,7 +569,7 @@ def main():
   secureApache(settingsUsed["documentRoot"],dry=dryRun)
   
   #
-  if options.enableSSL:
+  if options.enableSSL=="True":
     configureSSL(domainName,dry=dryRun)
   
   print("Wiki Admin Username:"+adminUser)
