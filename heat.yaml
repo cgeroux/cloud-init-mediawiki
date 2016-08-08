@@ -18,7 +18,7 @@ parameter_groups:
     - volume_name
     - volume_size
     - private_network
-    - public_network
+    - public_networkk
     - enable-ssl
   - label: Wiki Permissions
     description: Wiki permissions settings
@@ -107,7 +107,7 @@ parameters:
   key:
     type: string
     label: Key-pair name
-    description: Name of a previously generated key-pair in OpenStack to be used when connecting to the server via ssh
+    description: Name of a previously generated key-pair in OpenStack to be used when connecting to the server via ssh. Usefull for performing maintance tasks.
     constraints:
       - custom_constraint: nova.keypair
   volume_name:
