@@ -74,7 +74,7 @@ parameters:
   enable-ssl:
     type: boolean
     label: Enable SSL
-    description: Configures TSL (Transport Security Layer) formerly SSL with a self-signed certificate. This will encrypt all data sent to and from the web-server, however, since the certificate is self-signed, it is not registered with a Signing Authority and will appear as an untrusted website. For production sites it is recommended that you install a certificate signed by a recognized Signing Authority.
+    description: If selected it will configure TSL (Transport Security Layer) formerly SSL with a self-signed certificate. This will encrypt all data sent to and from the web-server, however, since the certificate is self-signed, it is not registered with a Signing Authority and will appear as an untrusted website. For production sites it is recommended that you install a certificate signed by a recognized Signing Authority. If not selected information sent to and from the webserver will not be encrypted (including passwords!) but you will not see a warning about your server being an untrusted site in your browser.
   logo-url:
     type: string
     label: Wiki Logo URL
