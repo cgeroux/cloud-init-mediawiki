@@ -107,7 +107,7 @@ parameters:
   key:
     type: string
     label: Key-pair name
-    description: Name of key-pair to be used for master and slave nodes
+    description: Name of a previously generated key-pair in OpenStack to be used when connecting to the server via ssh
     constraints:
       - custom_constraint: nova.keypair
   volume_name:
