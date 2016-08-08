@@ -198,7 +198,7 @@ def setupMediaWiki(settings={},dry=False):
     ,"wikiAdminName":adminName
     ,"wikiAdminPass":adminPassWd
     ,"server":"http://127.0.0.1/"
-    ,"enableUploads":"False"
+    ,"enableUploads":False
     ,"logoURL":"$wgResourceBasePath/resources/assets/cc-cloud-wiki-logo.png"
     ,"extraConfigLines":[]
     ,"dbserver":"localhost"
@@ -278,7 +278,7 @@ def setupMediaWiki(settings={},dry=False):
   localSettingsFile=os.path.join(settings["documentRoot"],"LocalSettings.php")
   
   #enable file uploads
-  if settings["enableUploads"]=="True":
+  if settings["enableUploads"]:
     execute(replaceStrInFile,"$wgEnableUploads = false;"
       ,"$wgEnableUploads = true;",localSettingsFile,dry=dry)
   
@@ -311,7 +311,7 @@ def setupMediaWiki(settings={},dry=False):
   if settings["wikiReadPerm"]=="user" or settings["wikiReadPerm"]=="sysop":
     execute(appendToFile,["$wgGroupPermissions['*']['read'] = false;\n"]
       ,localSettingsFile,dry=dry)
-    if settings["enableUploads"]=="True":
+    if settings["enableUploads"]:
       print("WARNING: read permission not public but uploads are enabled."
         +" The public will still be able to see uploads if they know the "
         +"correct url to go directly to the file.")
@@ -550,10 +550,21 @@ def main():
   settings["wikiEditPerm"]=options.wikiEditPerm
   settings["wikiAccCreatePerm"]=options.wikiAccCreatePerm
   settings["wikiAdminName"]=options.wikiAdminName
-  settings["server"]="http://"+domainName
-  settings["enableUploads"]=options.enableUploads
+  if options.enableUploads=="True":
+    settings["enableUploads"]=True
+  else:
+    settings["enableUploads"]=False
   settings["extraConfigLines"]=options.extraConfigLines
   settings["logoURL"]=options.logoURL
+  if options.enableSSL=="True":
+    settings["enableSSL"]=True
+  else:
+    settings["enableSSL"]=False
+  
+  if settings["enableSSL"]:
+    settings["server"]="https://"+domainName
+  else:
+    settings["server"]="http://"+domainName
   
   #adjust some php settings to improve security
   securePHP(dry=dryRun)
@@ -569,7 +580,7 @@ def main():
   secureApache(settingsUsed["documentRoot"],dry=dryRun)
   
   #
-  if options.enableSSL=="True":
+  if settingsUsed["enableSSL"]:
     configureSSL(domainName,dry=dryRun)
   
   print("Wiki Admin Username:"+adminUser)
