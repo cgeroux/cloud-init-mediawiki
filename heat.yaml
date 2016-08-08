@@ -36,7 +36,7 @@ parameters:
   read-permission:
     type: string
     label: Read permission
-    description: Who is able to read the wiki pages, with the exception of the login page. "public"= anyone on the internet, "user"=people with accounts on the wiki, "sysop"=users which are in the administrator group.
+    description: Who is able to read the wiki pages, with the exception of the login page which is public to allow users to login. "public"= anyone on the Internet, "user"=people with accounts on the wiki, "sysop"=users which are in the administrator group.
     constraints:
       - allowed_values:
         - public
