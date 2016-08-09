@@ -231,7 +231,7 @@ resources:
 outputs:
   Admin_acct_info:
     description: See log of mediawiki VM for the lines "Wiki Admin Username" and "Wiki Admin password" for the username and password for the wiki administrative account (Project->Compute->Instances->mediawiki-server->Log). May need to "View Full Log" if those lines don't appear after the VM has completed all the cloud-init setup.
-    value: ""
+    value: " "
   public_ip:
     description: Floating IP address of server, can be used to ssh into server
     value: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
