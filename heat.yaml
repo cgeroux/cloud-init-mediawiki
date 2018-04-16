@@ -141,7 +141,7 @@ resources:
     properties:
       flavor: {get_param: flavor}
       key_name: {get_param: key}
-      name: mediawiki-server
+      name: {get_param: "OS::stack_name"}
       block_device_mapping: [{device_name: "vda", volume_id: {get_resource: mediawiki_volume}, delete_on_termination: "false"}]
       networks:
         - port: {get_resource: mediawiki_port}
@@ -242,4 +242,3 @@ outputs:
         template: http://<hostip>
         params:
           <hostip>: { get_attr: [ mediawiki_floating_ip, floating_ip_address ] }
-
